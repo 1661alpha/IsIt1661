@@ -236,22 +236,33 @@ dQIDAQAB
         // ==========================================
         // 2. SISTEMA DE AUTO-PREENCHIMENTO (QR CODE)
         // ==========================================
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
+        window.addEventListener('load', () => { // Usamos 'load' para garantir que tudo carregou
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Força a Chave Pública oficial sempre
+    const pubKeyField = document.getElementById('publicKey');
+    if (pubKeyField) {
+        pubKeyField.value = OFFICIAL_PUBLIC_KEY.trim();
+    }
+    
+    // Captura a assinatura da URL
+    if (urlParams.has('sig')) {
+        const sigValue = urlParams.get('sig').trim(); // .trim() remove espaços acidentais
+        const sigField = document.getElementById('signature');
+        
+        if (sigField) {
+            sigField.value = sigValue;
             
-            // Preenche a chave pública oficial automaticamente ao abrir
-            document.getElementById('publicKey').value = OFFICIAL_PUBLIC_KEY;
+            // Feedback visual de que o automático funcionou
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = ">>> PROTOCOLO QR: ASSINATURA CARREGADA COM SUCESSO. FAÇA O UPLOAD DO ARQUIVO.";
+            statusDiv.style.color = 'var(--terminal-green)';
             
-            // Se o link do QR Code tiver ?sig=... ele preenche aqui
-            if (urlParams.has('sig')) {
-                document.getElementById('signature').value = urlParams.get('sig');
-                
-                const statusDiv = document.getElementById('status');
-                statusDiv.style.display = 'block';
-                statusDiv.innerHTML = ">>> PROTOCOLO QR DETECTADO: ASSINATURA CARREGADA.";
-                statusDiv.style.color = 'var(--terminal-green)';
-            }
-        });
+            console.log("Assinatura carregada via URL:", sigValue);
+        }
+    }
+});
 
         // ==========================================
         // 3. FUNÇÃO PRINCIPAL DE VERIFICAÇÃO
@@ -341,3 +352,4 @@ dQIDAQAB
     </script>
 </body>
 </html>
+
