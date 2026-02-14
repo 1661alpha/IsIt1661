@@ -10,7 +10,7 @@
     <style>
         :root {
             --bg-color: #050505;
-            --glass-bg: rgba(20, 30, 20, 0.4);
+            --glass-bg: rgba(20, 30, 20, 0.6);
             --glass-border: rgba(0, 255, 0, 0.1);
             --terminal-green: #00ff41;
             --amber-alert: #ffbf00;
@@ -43,10 +43,7 @@
             content: " ";
             display: block;
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
+            top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             z-index: 2;
             background-size: 100% 2px, 3px 100%;
@@ -60,8 +57,6 @@
             max-width: 700px;
             padding: 40px;
             border-radius: 16px;
-            
-            /* Glassmorphism */
             background: var(--glass-bg);
             backdrop-filter: blur(var(--blur));
             -webkit-backdrop-filter: blur(var(--blur));
@@ -80,9 +75,7 @@
             text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
-        .input-group {
-            margin-bottom: 25px;
-        }
+        .input-group { margin-bottom: 25px; }
 
         label {
             display: block;
@@ -92,7 +85,7 @@
             font-weight: bold;
         }
 
-        input[type="file"], textarea {
+        input[type="file"], textarea, input[type="text"] {
             width: 100%;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid #333;
@@ -105,13 +98,16 @@
             transition: 0.3s;
         }
 
-        textarea { height: 100px; }
+        textarea { height: 80px; }
 
         input:focus, textarea:focus {
             outline: none;
             border-color: var(--terminal-green);
             box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
         }
+
+        /* Botão escondido visualmente, mas funcional para lógica */
+        #publicKey { display: none; }
 
         .btn-verify {
             width: 100%;
@@ -125,8 +121,7 @@
             cursor: pointer;
             text-transform: uppercase;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            margin-top: 10px;
         }
 
         .btn-verify:hover {
@@ -142,6 +137,7 @@
             font-weight: bold;
             border-radius: 4px;
             display: none;
+            word-break: break-word;
         }
 
         .success {
@@ -154,6 +150,19 @@
             border: 1px solid #ff4444;
             background: rgba(255, 68, 68, 0.1);
             color: #ff4444;
+        }
+        
+        .loading {
+            border: 1px solid var(--amber-alert);
+            background: rgba(255, 191, 0, 0.1);
+            color: var(--amber-alert);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
         }
 
         .helper-text {
@@ -169,19 +178,21 @@
     <div class="container">
         <h1>/// Protocolo de Verificação</h1>
         
+        <textarea id="publicKey"></textarea>
+
         <div class="input-group">
             <label>>> PASSO 1: ARQUIVO SUSPEITO</label>
             <input type="file" id="fileInput">
-            <div class="helper-text">O artefato digital a ser analisado.</div>
+            <div class="helper-text" id="fileHelper">Selecione o artefato local ou aguarde download automático.</div>
         </div>
 
         <div class="input-group">
-            <label>>> PASSO 2: ASSINATURA (HEX)</label>
-            <textarea id="signature" style="height: 60px;" placeholder="Ex: 4a8f9c..."></textarea>
-            <div class="helper-text">A sequência hexadecimal de assinatura.</div>
+            <label>>> PASSO 2: ASSINATURA (HEX ou BASE64)</label>
+            <textarea id="signature" placeholder="Cole a assinatura Hexadecimal ou Base64..."></textarea>
+            <div class="helper-text">Identificação automática de formato ativada.</div>
         </div>
 
-        <button class="btn-verify" onclick="verifyIntegrity()">INICIAR VERIFICAÇÃO</button>
+        <button class="btn-verify" id="btnVerify">INICIAR VERIFICAÇÃO</button>
         
         <div id="status"></div>
     </div>
@@ -190,7 +201,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // SUA CONFIGURAÇÃO
         const firebaseConfig = {
             apiKey: "AIzaSyANZ70umUwpT_drTgs9F3MZTX4XL2RRL8Q",
             authDomain: "isit1661.firebaseapp.com",
@@ -203,7 +213,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Função global para registrar logs
         window.logAttempt = async (status, fileName) => {
             try {
                 await addDoc(collection(db, "attempts"), {
@@ -214,15 +223,13 @@
                 });
                 console.log("Log 1661 registrado.");
             } catch (e) {
-                console.error("Falha no reporte de log:", e);
+                console.error("Falha log:", e);
             }
         };
     </script>
 
     <script>
-        // ==========================================
-        // 1. CONFIGURAÇÃO DO MESTRE (PROJETO 1661)
-        // ==========================================
+        // 1. CHAVE MESTRA FIXA
         const OFFICIAL_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApB08GAx9ChluTH2fk6fv
 ttredta5+aamfE0jdreuDhlIu0fICQW2eWutaZCbnTo8lqEK93ZpKVydxUhkBD5E
@@ -233,67 +240,101 @@ lQcY+8x1NHpQMg6YVtoOG+oHgaokXu78yw7MZCuGN+n7SvNbgI/xP/w8O0yxSf42
 dQIDAQAB
 -----END PUBLIC KEY-----`;
 
-        // ==========================================
-        // 2. SISTEMA DE AUTO-PREENCHIMENTO (QR CODE)
-        // ==========================================
-        window.addEventListener('load', () => { // Usamos 'load' para garantir que tudo carregou
-    const urlParams = new URLSearchParams(window.location.search);
-    
-    // Força a Chave Pública oficial sempre
-    const pubKeyField = document.getElementById('publicKey');
-    if (pubKeyField) {
-        pubKeyField.value = OFFICIAL_PUBLIC_KEY.trim();
-    }
-    
-    // Captura a assinatura da URL
-    if (urlParams.has('sig')) {
-        const sigValue = urlParams.get('sig').trim(); // .trim() remove espaços acidentais
-        const sigField = document.getElementById('signature');
-        
-        if (sigField) {
-            sigField.value = sigValue;
-            
-            // Feedback visual de que o automático funcionou
-            const statusDiv = document.getElementById('status');
-            statusDiv.style.display = 'block';
-            statusDiv.innerHTML = ">>> PROTOCOLO QR: ASSINATURA CARREGADA COM SUCESSO. FAÇA O UPLOAD DO ARQUIVO.";
-            statusDiv.style.color = 'var(--terminal-green)';
-            
-            console.log("Assinatura carregada via URL:", sigValue);
-        }
-    }
-});
+        // Variável global para armazenar arquivo baixado automaticamente
+        let autoDownloadedBuffer = null;
+        let autoFileName = null;
 
-        // ==========================================
-        // 3. FUNÇÃO PRINCIPAL DE VERIFICAÇÃO
-        // ==========================================
+        // 2. INICIALIZAÇÃO E EVENT LISTENERS
+        window.addEventListener('load', async () => {
+            // Garante que o botão chama a função
+            document.getElementById('btnVerify').addEventListener('click', verifyIntegrity);
+            
+            // Preenche a chave oculta
+            document.getElementById('publicKey').value = OFFICIAL_PUBLIC_KEY.trim();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusDiv = document.getElementById('status');
+
+            // A. Captura Assinatura da URL
+            if (urlParams.has('sig')) {
+                document.getElementById('signature').value = urlParams.get('sig').trim();
+            }
+
+            // B. Captura Arquivo Remoto da URL (ex: ?url=https://site.com/pista.pdf)
+            if (urlParams.has('url')) {
+                const fileUrl = urlParams.get('url');
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'loading';
+                statusDiv.innerHTML = ">>> PROTOCOLO REMOTO: BAIXANDO ARTEFATO DO SERVIDOR...";
+                
+                try {
+                    const response = await fetch(fileUrl);
+                    if (!response.ok) throw new Error("Falha no download");
+                    
+                    autoDownloadedBuffer = await response.arrayBuffer();
+                    // Tenta adivinhar nome do arquivo pela URL
+                    autoFileName = fileUrl.substring(fileUrl.lastIndexOf('/')+1) || "artefato_remoto";
+                    
+                    statusDiv.innerHTML = ">>> DOWNLOAD CONCLUÍDO. INICIANDO VERIFICAÇÃO...";
+                    
+                    // Se já tiver assinatura, roda a verificação automaticamente
+                    if (document.getElementById('signature').value) {
+                        verifyIntegrity();
+                    } else {
+                        statusDiv.className = 'success';
+                        statusDiv.innerHTML = "DOWNLOAD OK. AGUARDANDO ASSINATURA.";
+                    }
+                } catch (error) {
+                    statusDiv.className = 'failure';
+                    statusDiv.innerHTML = "ERRO: NÃO FOI POSSÍVEL BAIXAR O ARQUIVO REMOTO (CORS OU URL INVÁLIDA).";
+                }
+            } else if (urlParams.has('sig')) {
+                statusDiv.style.display = 'block';
+                statusDiv.className = 'success';
+                statusDiv.innerHTML = ">>> PROTOCOLO QR: ASSINATURA CARREGADA.";
+            }
+        });
+
+        // 3. FUNÇÃO DE VERIFICAÇÃO (CORRIGIDA E ROBUSTA)
         async function verifyIntegrity() {
             const statusDiv = document.getElementById('status');
-            const pubKeyInput = document.getElementById('publicKey').value.trim();
             const fileInput = document.getElementById('fileInput');
-            const signatureHex = document.getElementById('signature').value.trim();
+            const signatureRaw = document.getElementById('signature').value.trim();
+            const pubKeyInput = document.getElementById('publicKey').value.trim();
 
             statusDiv.style.display = 'block';
-            statusDiv.className = '';
-            statusDiv.innerHTML = 'ANALISANDO INTEGRIDADE DO ARTEFATO...';
-            statusDiv.style.color = 'var(--amber-alert)';
+            statusDiv.className = 'loading';
+            statusDiv.innerHTML = 'COMPUTANDO HASH E DECIFRANDO...';
 
-            // Validação de Segurança: Apenas a sua chave funciona
-            if (pubKeyInput !== OFFICIAL_PUBLIC_KEY) {
-                showResult(false, "ACESSO NEGADO: CHAVE NÃO RECONHECIDA PELO CÍRCULO 1661.");
-                if(window.logAttempt) window.logAttempt("CHAVE_INVALIDA", fileInput.files[0]?.name);
+            // Verificação da Chave Mestra
+            if (pubKeyInput !== OFFICIAL_PUBLIC_KEY.trim()) {
+                showResult(false, "ALERTA DE SEGURANÇA: CHAVE MESTRA ALTERADA.");
                 return;
             }
 
-            if (fileInput.files.length === 0 || !signatureHex) {
-                showResult(false, "ERRO: AGUARDANDO UPLOAD DO ARTEFATO E ASSINATURA.");
+            // Define qual arquivo usar (o do input ou o baixado automaticamente)
+            let fileBuffer;
+            let fileNameForLog;
+
+            if (autoDownloadedBuffer) {
+                fileBuffer = autoDownloadedBuffer;
+                fileNameForLog = autoFileName + " (AUTO)";
+            } else if (fileInput.files.length > 0) {
+                fileBuffer = await fileInput.files[0].arrayBuffer();
+                fileNameForLog = fileInput.files[0].name;
+            } else {
+                showResult(false, "ERRO: NENHUM ARQUIVO SELECIONADO OU BAIXADO.");
+                return;
+            }
+
+            if (!signatureRaw) {
+                showResult(false, "ERRO: ASSINATURA AUSENTE.");
                 return;
             }
 
             try {
-                const fileData = await fileInput.files[0].arrayBuffer();
+                // Prepara a Chave
                 const binaryKey = pemToArrayBuffer(pubKeyInput);
-                
                 const cryptoKey = await window.crypto.subtle.importKey(
                     "spki",
                     binaryKey,
@@ -302,36 +343,40 @@ dQIDAQAB
                     ["verify"]
                 );
 
-                const signatureBuffer = hexToArrayBuffer(signatureHex);
+                // Prepara a Assinatura (Detecta se é Hex ou Base64)
+                const signatureBuffer = parseSignature(signatureRaw);
 
+                // Verifica
                 const isValid = await window.crypto.subtle.verify(
                     { name: "RSA-PSS", saltLength: 32 },
                     cryptoKey,
                     signatureBuffer,
-                    fileData
+                    fileBuffer
                 );
 
                 if (isValid) {
-                    showResult(true, "CONFIRMADO: O ARTEFATO É LEGÍTIMO E PERTENCE AO PROJETO 1661.");
-                    if(window.logAttempt) window.logAttempt("SUCESSO", fileInput.files[0].name);
+                    showResult(true, "ACESSO CONCEDIDO: ARTEFATO AUTÊNTICO [PROJETO 1661].");
+                    if(window.logAttempt) window.logAttempt("SUCESSO", fileNameForLog);
                 } else {
-                    showResult(false, "ALERTA: ESTE ARQUIVO FOI ADULTERADO OU É UMA CÓPIA FALSA.");
-                    if(window.logAttempt) window.logAttempt("FALHA_VALIDACAO", fileInput.files[0].name);
+                    showResult(false, "ACESSO NEGADO: ASSINATURA NÃO CORRESPONDE AO ARQUIVO.");
+                    if(window.logAttempt) window.logAttempt("FALHA_VALIDACAO", fileNameForLog);
                 }
 
             } catch (error) {
                 console.error(error);
-                showResult(false, "ERRO CRIPTOGRÁFICO: DADOS INCOMPATÍVEIS.");
+                showResult(false, "ERRO CRÍTICO: FORMATO DE DADOS INVÁLIDO (Base64/Hex corrompido).");
             }
         }
 
-        // --- Utilitários Auxiliares ---
+        // --- Utilitários ---
+
         function showResult(isSuccess, text) {
             const div = document.getElementById('status');
             div.innerHTML = text;
             div.className = isSuccess ? 'success' : 'failure';
         }
 
+        // Converte PEM para Buffer
         function pemToArrayBuffer(pem) {
             const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----/g, '').replace(/-----END PUBLIC KEY-----/g, '').replace(/\s/g, '');
             const binary = atob(b64);
@@ -341,15 +386,41 @@ dQIDAQAB
             return buffer;
         }
 
-        function hexToArrayBuffer(hexString) {
-            hexString = hexString.replace(/\s/g, '');
-            const byteArray = new Uint8Array(hexString.length / 2);
-            for (let i = 0; i < hexString.length; i += 2) {
-                byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16);
+        // LÓGICA INTELIGENTE: Detecta se é Hex ou Base64 e converte
+        function parseSignature(input) {
+            // Remove espaços e quebras de linha
+            const cleanInput = input.replace(/\s/g, '');
+            
+            // Regex para checar se é estritamente Hexadecimal
+            const isHex = /^[0-9a-fA-F]+$/.test(cleanInput);
+
+            if (isHex && cleanInput.length % 2 === 0) {
+                // Trata como HEX
+                const byteArray = new Uint8Array(cleanInput.length / 2);
+                for (let i = 0; i < cleanInput.length; i += 2) {
+                    byteArray[i / 2] = parseInt(cleanInput.substr(i, 2), 16);
+                }
+                return byteArray.buffer;
+            } else {
+                // Tenta tratar como BASE64 (Padrão ou URL-safe)
+                try {
+                    // Corrige Base64 URL Safe se necessário (- por + e _ por /)
+                    let base64 = cleanInput.replace(/-/g, '+').replace(/_/g, '/');
+                    // Adiciona padding se necessário
+                    while (base64.length % 4) { base64 += '='; }
+                    
+                    const binary = atob(base64);
+                    const buffer = new ArrayBuffer(binary.length);
+                    const view = new Uint8Array(buffer);
+                    for (let i = 0; i < binary.length; i++) { 
+                        view[i] = binary.charCodeAt(i); 
+                    }
+                    return buffer;
+                } catch (e) {
+                    throw new Error("Formato de assinatura desconhecido");
+                }
             }
-            return byteArray.buffer;
         }
     </script>
 </body>
 </html>
-
