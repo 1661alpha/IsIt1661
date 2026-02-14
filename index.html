@@ -170,19 +170,13 @@
         <h1>/// Protocolo de Verificação</h1>
         
         <div class="input-group">
-            <label>>> PASSO 1: CHAVE PÚBLICA (PEM)</label>
-            <textarea id="publicKey" placeholder="-----BEGIN PUBLIC KEY----- ..."></textarea>
-            <div class="helper-text">Insira a chave pública RSA fornecida pelo Guardião.</div>
-        </div>
-
-        <div class="input-group">
-            <label>>> PASSO 2: ARQUIVO SUSPEITO</label>
+            <label>>> PASSO 1: ARQUIVO SUSPEITO</label>
             <input type="file" id="fileInput">
             <div class="helper-text">O artefato digital a ser analisado.</div>
         </div>
 
         <div class="input-group">
-            <label>>> PASSO 3: ASSINATURA (HEX)</label>
+            <label>>> PASSO 2: ASSINATURA (HEX)</label>
             <textarea id="signature" style="height: 60px;" placeholder="Ex: 4a8f9c..."></textarea>
             <div class="helper-text">A sequência hexadecimal de assinatura.</div>
         </div>
@@ -230,8 +224,7 @@
         // CONFIGURAÇÃO DO MESTRE (PROJETO 1661)
         // ==========================================
         
-        // 1. Defina aqui a SUA chave pública oficial. 
-        // O jogador precisará colar EXATAMENTE isso para o site aceitar.
+        // A chave pública oficial é fixa no código agora.
         const OFFICIAL_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApB08GAx9ChluTH2fk6fv
 ttredta5+aamfE0jdreuDhlIu0fICQW2eWutaZCbnTo8lqEK93ZpKVydxUhkBD5E
@@ -244,7 +237,6 @@ dQIDAQAB
 
         async function verifyIntegrity() {
             const statusDiv = document.getElementById('status');
-            const pubKeyInput = document.getElementById('publicKey').value.trim();
             const fileInput = document.getElementById('fileInput');
             const signatureHex = document.getElementById('signature').value.trim();
 
@@ -253,14 +245,7 @@ dQIDAQAB
             statusDiv.innerHTML = 'INICIANDO PROTOCOLO DE VERIFICAÇÃO 1661...';
             statusDiv.style.color = '#ffbf00';
 
-            // --- A TRAVA DE SEGURANÇA ESTÁ AQUI ---
-            if (pubKeyInput !== OFFICIAL_PUBLIC_KEY) {
-                showResult(false, "ACESSO NEGADO: ESTA CHAVE NÃO PERTENCE AO CÍRCULO 1661.");
-                // Registra no seu Firebase que alguém tentou usar uma chave falsa
-                if(window.logAttempt) window.logAttempt("CHAVE_FALSA", fileInput.files[0]?.name);
-                return;
-            }
-
+            // Verifica se os campos básicos (arquivo e assinatura) estão preenchidos
             if (fileInput.files.length === 0 || !signatureHex) {
                 showResult(false, "ERRO: DADOS INCOMPLETOS PARA ANÁLISE.");
                 return;
@@ -270,8 +255,9 @@ dQIDAQAB
                 // 1. Processar Arquivo
                 const fileData = await fileInput.files[0].arrayBuffer();
 
-                // 2. Importar a Chave (usando a que o usuário colou, que já sabemos ser a oficial)
-                const binaryKey = pemToArrayBuffer(pubKeyInput);
+                // 2. Importar a Chave Oficial (Fixa)
+                // Usamos a constante diretamente em vez do input do usuário
+                const binaryKey = pemToArrayBuffer(OFFICIAL_PUBLIC_KEY);
                 const cryptoKey = await window.crypto.subtle.importKey(
                     "spki",
                     binaryKey,
@@ -296,6 +282,7 @@ dQIDAQAB
                     if(window.logAttempt) window.logAttempt("SUCESSO", fileInput.files[0].name);
                 } else {
                     showResult(false, "STATUS: FALSIFICADO. INTEGRIDADE VIOLADA.");
+                    // Se falhar aqui, significa que a assinatura não bate com a chave oficial
                     if(window.logAttempt) window.logAttempt("FALHA_MATEMATICA", fileInput.files[0].name);
                 }
 
@@ -331,7 +318,3 @@ dQIDAQAB
     </script>
 </body>
 </html>
-</body>
-</html>
-
-
