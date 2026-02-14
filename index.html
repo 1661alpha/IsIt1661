@@ -226,69 +226,81 @@
     </script>
 
     <script>
-        // --------------------------------------------------------
-        // LÓGICA CRIPTOGRÁFICA (Web Crypto API)
-        // --------------------------------------------------------
+        // ==========================================
+        // CONFIGURAÇÃO DO MESTRE (PROJETO 1661)
+        // ==========================================
+        
+        // 1. Defina aqui a SUA chave pública oficial. 
+        // O jogador precisará colar EXATAMENTE isso para o site aceitar.
+        const OFFICIAL_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyY6Z4C6N1Q7yG+mK7L9S
+8uX8vG1J7k2n5m9l8k7j6h5g4f3d2s1a0p9o8n7m6l5k4j3i2h1g0f9e8d7c6b5a
+4z3y2x1w0v9u8t7s6r5q4p3o2n1m0l9k8j7i6h5g4f3d2s1a0p9o8n7m6l5k4j3i
+2h1g0f9e8d7c6b5a4z3y2x1w0v9u8t7s6r5q4p3o2n1m0l9k8j7i6h5g4f3d2s1a
+0p9o8n7m6l5k4j3i2h1g0f9e8d7c6b5a4z3y2x1w0v9u8t7s6r5q4p3o2n1m0l9k
+8j7i6h5g4f3d2s1awIDAQAB
+-----END PUBLIC KEY-----`;
 
         async function verifyIntegrity() {
             const statusDiv = document.getElementById('status');
-            const pubKeyPem = document.getElementById('publicKey').value;
+            const pubKeyInput = document.getElementById('publicKey').value.trim();
             const fileInput = document.getElementById('fileInput');
             const signatureHex = document.getElementById('signature').value.trim();
 
             statusDiv.style.display = 'block';
             statusDiv.className = '';
-            statusDiv.innerHTML = 'COMPUTANDO HASH E DECIFRANDO... AGUARDE.';
+            statusDiv.innerHTML = 'INICIANDO PROTOCOLO DE VERIFICAÇÃO 1661...';
             statusDiv.style.color = '#ffbf00';
 
-            if (!pubKeyPem || fileInput.files.length === 0 || !signatureHex) {
-                showResult(false, "ERRO: DADOS INCOMPLETOS.");
+            // --- A TRAVA DE SEGURANÇA ESTÁ AQUI ---
+            if (pubKeyInput !== OFFICIAL_PUBLIC_KEY) {
+                showResult(false, "ACESSO NEGADO: ESTA CHAVE NÃO PERTENCE AO CÍRCULO 1661.");
+                // Registra no seu Firebase que alguém tentou usar uma chave falsa
+                if(window.logAttempt) window.logAttempt("CHAVE_FALSA", fileInput.files[0]?.name);
+                return;
+            }
+
+            if (fileInput.files.length === 0 || !signatureHex) {
+                showResult(false, "ERRO: DADOS INCOMPLETOS PARA ANÁLISE.");
                 return;
             }
 
             try {
-                // 1. Processar Arquivo (Ler como ArrayBuffer)
+                // 1. Processar Arquivo
                 const fileData = await fileInput.files[0].arrayBuffer();
 
-                // 2. Processar Chave Pública (Converter PEM para CryptoKey)
-                const binaryKey = pemToArrayBuffer(pubKeyPem);
+                // 2. Importar a Chave (usando a que o usuário colou, que já sabemos ser a oficial)
+                const binaryKey = pemToArrayBuffer(pubKeyInput);
                 const cryptoKey = await window.crypto.subtle.importKey(
                     "spki",
                     binaryKey,
-                    {
-                        name: "RSA-PSS",
-                        hash: "SHA-256"
-                    },
+                    { name: "RSA-PSS", hash: "SHA-256" },
                     false,
                     ["verify"]
                 );
 
-                // 3. Processar Assinatura (Hex para ArrayBuffer)
+                // 3. Processar Assinatura
                 const signatureBuffer = hexToArrayBuffer(signatureHex);
 
-                // 4. Executar Verificação Matemática Real
+                // 4. Verificação Matemática
                 const isValid = await window.crypto.subtle.verify(
-                    {
-                        name: "RSA-PSS",
-                        saltLength: 32, // Padrão OpenSSL comum
-                    },
+                    { name: "RSA-PSS", saltLength: 32 },
                     cryptoKey,
                     signatureBuffer,
                     fileData
                 );
 
-                // 5. Resultado e Log
                 if (isValid) {
-                    showResult(true, "AUTENTICIDADE CONFIRMADA. ARTEFATO LEGÍTIMO.");
-                    if(window.logAttempt) window.logAttempt("SUCCESS", fileInput.files[0].name);
+                    showResult(true, "STATUS: AUTÊNTICO. ORIGEM CONFIRMADA.");
+                    if(window.logAttempt) window.logAttempt("SUCESSO", fileInput.files[0].name);
                 } else {
-                    showResult(false, "ALERTA: ASSINATURA INVÁLIDA. ARQUIVO ADULTERADO OU FALSIFICADO.");
-                    if(window.logAttempt) window.logAttempt("FAILED", fileInput.files[0].name);
+                    showResult(false, "STATUS: FALSIFICADO. INTEGRIDADE VIOLADA.");
+                    if(window.logAttempt) window.logAttempt("FALHA_MATEMATICA", fileInput.files[0].name);
                 }
 
             } catch (error) {
                 console.error(error);
-                showResult(false, "ERRO CRIPTOGRÁFICO: FORMATO DE CHAVE OU ASSINATURA INCORRETO.");
+                showResult(false, "ERRO CRIPTOGRÁFICO: DADOS CORROMPIDOS.");
             }
         }
 
@@ -298,26 +310,17 @@
             div.className = isSuccess ? 'success' : 'failure';
         }
 
-        // --- Utilitários de Conversão ---
-
         function pemToArrayBuffer(pem) {
-            const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----/g, '')
-                           .replace(/-----END PUBLIC KEY-----/g, '')
-                           .replace(/\s/g, '');
+            const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----/g, '').replace(/-----END PUBLIC KEY-----/g, '').replace(/\s/g, '');
             const binary = atob(b64);
             const buffer = new ArrayBuffer(binary.length);
             const view = new Uint8Array(buffer);
-            for (let i = 0; i < binary.length; i++) {
-                view[i] = binary.charCodeAt(i);
-            }
+            for (let i = 0; i < binary.length; i++) { view[i] = binary.charCodeAt(i); }
             return buffer;
         }
 
         function hexToArrayBuffer(hexString) {
             hexString = hexString.replace(/\s/g, '');
-            if (hexString.length % 2 !== 0) {
-                throw new Error("Hex inválido");
-            }
             const byteArray = new Uint8Array(hexString.length / 2);
             for (let i = 0; i < hexString.length; i += 2) {
                 byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16);
@@ -327,3 +330,6 @@
     </script>
 </body>
 </html>
+</body>
+</html>
+
