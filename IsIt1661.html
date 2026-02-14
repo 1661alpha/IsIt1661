@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VERIFICADOR DE INTEGRIDADE /// PROJETO ARG</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --glass-bg: rgba(20, 30, 20, 0.4);
+            --glass-border: rgba(0, 255, 0, 0.1);
+            --terminal-green: #00ff41;
+            --amber-alert: #ffbf00;
+            --text-dim: #a8b5a8;
+            --blur: 12px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 50, 0, 0.1) 0%, transparent 60%),
+                linear-gradient(0deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-dim);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* Scanline Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 700px;
+            padding: 40px;
+            border-radius: 16px;
+            
+            /* Glassmorphism */
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            color: var(--terminal-green);
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: var(--amber-alert);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        input[type="file"], textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            color: var(--terminal-green);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            transition: 0.3s;
+        }
+
+        textarea { height: 100px; }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--terminal-green);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
+        }
+
+        .btn-verify {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-verify:hover {
+            background: var(--terminal-green);
+            color: #000;
+            box-shadow: 0 0 20px var(--terminal-green);
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .success {
+            border: 1px solid var(--terminal-green);
+            background: rgba(0, 255, 65, 0.1);
+            color: var(--terminal-green);
+        }
+
+        .failure {
+            border: 1px solid #ff4444;
+            background: rgba(255, 68, 68, 0.1);
+            color: #ff4444;
+        }
+
+        .helper-text {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>/// Protocolo de Verificação</h1>
+        
+        <div class="input-group">
+            <label>>> PASSO 1: CHAVE PÚBLICA (PEM)</label>
+            <textarea id="publicKey" placeholder="-----BEGIN PUBLIC KEY----- ..."></textarea>
+            <div class="helper-text">Insira a chave pública RSA fornecida pelo Guardião.</div>
+        </div>
+
+        <div class="input-group">
+            <label>>> PASSO 2: ARQUIVO SUSPEITO</label>
+            <input type="file" id="fileInput">
+            <div class="helper-text">O artefato digital a ser analisado.</div>
+        </div>
+
+        <div class="input-group">
+            <label>>> PASSO 3: ASSINATURA (HEX)</label>
+            <textarea id="signature" style="height: 60px;" placeholder="Ex: 4a8f9c..."></textarea>
+            <div class="helper-text">A sequência hexadecimal de assinatura.</div>
+        </div>
+
+        <button class="btn-verify" onclick="verifyIntegrity()">INICIAR VERIFICAÇÃO</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script type="module">
+        // --------------------------------------------------------
+        // CONFIGURAÇÃO FIREBASE
+        // Substitua os campos abaixo com suas credenciais do Console
+        // --------------------------------------------------------
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "SUA_API_KEY",
+            authDomain: "SEU_PROJECT.firebaseapp.com",
+            projectId: "SEU_PROJECT_ID",
+            storageBucket: "SEU_PROJECT.appspot.com",
+            messagingSenderId: "NUMERO",
+            appId: "ID_DO_APP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // Expor função de log para o escopo global (para usar no botão)
+        window.logAttempt = async (status, fileName) => {
+            try {
+                await addDoc(collection(db, "verification_attempts"), {
+                    status: status,
+                    file: fileName || "unknown",
+                    timestamp: serverTimestamp(),
+                    userAgent: navigator.userAgent
+                });
+                console.log("Log registrado no Firebase.");
+            } catch (e) {
+                console.error("Erro ao logar no Firebase (modo offline?)", e);
+            }
+        };
+    </script>
+
+    <script>
+        // --------------------------------------------------------
+        // LÓGICA CRIPTOGRÁFICA (Web Crypto API)
+        // --------------------------------------------------------
+
+        async function verifyIntegrity() {
+            const statusDiv = document.getElementById('status');
+            const pubKeyPem = document.getElementById('publicKey').value;
+            const fileInput = document.getElementById('fileInput');
+            const signatureHex = document.getElementById('signature').value.trim();
+
+            statusDiv.style.display = 'block';
+            statusDiv.className = '';
+            statusDiv.innerHTML = 'COMPUTANDO HASH E DECIFRANDO... AGUARDE.';
+            statusDiv.style.color = '#ffbf00';
+
+            if (!pubKeyPem || fileInput.files.length === 0 || !signatureHex) {
+                showResult(false, "ERRO: DADOS INCOMPLETOS.");
+                return;
+            }
+
+            try {
+                // 1. Processar Arquivo (Ler como ArrayBuffer)
+                const fileData = await fileInput.files[0].arrayBuffer();
+
+                // 2. Processar Chave Pública (Converter PEM para CryptoKey)
+                const binaryKey = pemToArrayBuffer(pubKeyPem);
+                const cryptoKey = await window.crypto.subtle.importKey(
+                    "spki",
+                    binaryKey,
+                    {
+                        name: "RSA-PSS",
+                        hash: "SHA-256"
+                    },
+                    false,
+                    ["verify"]
+                );
+
+                // 3. Processar Assinatura (Hex para ArrayBuffer)
+                const signatureBuffer = hexToArrayBuffer(signatureHex);
+
+                // 4. Executar Verificação Matemática Real
+                const isValid = await window.crypto.subtle.verify(
+                    {
+                        name: "RSA-PSS",
+                        saltLength: 32, // Padrão OpenSSL comum
+                    },
+                    cryptoKey,
+                    signatureBuffer,
+                    fileData
+                );
+
+                // 5. Resultado e Log
+                if (isValid) {
+                    showResult(true, "AUTENTICIDADE CONFIRMADA. ARTEFATO LEGÍTIMO.");
+                    if(window.logAttempt) window.logAttempt("SUCCESS", fileInput.files[0].name);
+                } else {
+                    showResult(false, "ALERTA: ASSINATURA INVÁLIDA. ARQUIVO ADULTERADO OU FALSIFICADO.");
+                    if(window.logAttempt) window.logAttempt("FAILED", fileInput.files[0].name);
+                }
+
+            } catch (error) {
+                console.error(error);
+                showResult(false, "ERRO CRIPTOGRÁFICO: FORMATO DE CHAVE OU ASSINATURA INCORRETO.");
+            }
+        }
+
+        function showResult(isSuccess, text) {
+            const div = document.getElementById('status');
+            div.innerHTML = text;
+            div.className = isSuccess ? 'success' : 'failure';
+        }
+
+        // --- Utilitários de Conversão ---
+
+        function pemToArrayBuffer(pem) {
+            // Remove cabeçalhos e quebras de linha
+            const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----/g, '')
+                           .replace(/-----END PUBLIC KEY-----/g, '')
+                           .replace(/\s/g, '');
+            const binary = atob(b64);
+            const buffer = new ArrayBuffer(binary.length);
+            const view = new Uint8Array(buffer);
+            for (let i = 0; i < binary.length; i++) {
+                view[i] = binary.charCodeAt(i);
+            }
+            return buffer;
+        }
+
+        function hexToArrayBuffer(hexString) {
+            // Remove espaços se houver
+            hexString = hexString.replace(/\s/g, '');
+            if (hexString.length % 2 !== 0) {
+                throw new Error("Hex inválido");
+            }
+            const byteArray = new Uint8Array(hexString.length / 2);
+            for (let i = 0; i < hexString.length; i += 2) {
+                byteArray[i / 2] = parseInt(hexString.substr(i, 2), 16);
+            }
+            return byteArray.buffer;
+        }
+    </script>
+</body>
+</html>
