@@ -193,22 +193,39 @@
     </div>
 
     <script type="module">
-        // --------------------------------------------------------
-        // CONFIGURAÇÃO FIREBASE
-        // Substitua os campos abaixo com suas credenciais do Console
-        // --------------------------------------------------------
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    // 1. Importações necessárias usando URLs CDN para rodar no navegador
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "SUA_API_KEY",
-            authDomain: "SEU_PROJECT.firebaseapp.com",
-            projectId: "SEU_PROJECT_ID",
-            storageBucket: "SEU_PROJECT.appspot.com",
-            messagingSenderId: "NUMERO",
-            appId: "ID_DO_APP"
-        };
+    // 2. Sua configuração que você acabou de obter
+    const firebaseConfig = {
+        apiKey: "AIzaSyANZ70umUwpT_drTgs9F3MZTX4XL2RRL8Q",
+        authDomain: "isit1661.firebaseapp.com",
+        projectId: "isit1661",
+        storageBucket: "isit1661.firebasestorage.app",
+        messagingSenderId: "557002116158",
+        appId: "1:557002116158:web:3c6c196f7a5856eb50556f"
+    };
+
+    // 3. Inicialização
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 4. Função global para registrar as tentativas no Firestore
+    window.logAttempt = async (status, fileName) => {
+        try {
+            await addDoc(collection(db, "attempts"), {
+                status: status,
+                file: fileName || "desconhecido",
+                timestamp: serverTimestamp(),
+                userAgent: navigator.userAgent
+            });
+            console.log("Log 1661 registrado.");
+        } catch (e) {
+            console.error("Falha no reporte de log:", e);
+        }
+    };
+</script>
 
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
