@@ -221,10 +221,8 @@
 
     <script>
         // ==========================================
-        // CONFIGURAÇÃO DO MESTRE (PROJETO 1661)
+        // 1. CONFIGURAÇÃO DO MESTRE (PROJETO 1661)
         // ==========================================
-        
-        // A chave pública oficial é fixa no código agora.
         const OFFICIAL_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApB08GAx9ChluTH2fk6fv
 ttredta5+aamfE0jdreuDhlIu0fICQW2eWutaZCbnTo8lqEK93ZpKVydxUhkBD5E
@@ -235,29 +233,56 @@ lQcY+8x1NHpQMg6YVtoOG+oHgaokXu78yw7MZCuGN+n7SvNbgI/xP/w8O0yxSf42
 dQIDAQAB
 -----END PUBLIC KEY-----`;
 
+        // ==========================================
+        // 2. SISTEMA DE AUTO-PREENCHIMENTO (QR CODE)
+        // ==========================================
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Preenche a chave pública oficial automaticamente ao abrir
+            document.getElementById('publicKey').value = OFFICIAL_PUBLIC_KEY;
+            
+            // Se o link do QR Code tiver ?sig=... ele preenche aqui
+            if (urlParams.has('sig')) {
+                document.getElementById('signature').value = urlParams.get('sig');
+                
+                const statusDiv = document.getElementById('status');
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = ">>> PROTOCOLO QR DETECTADO: ASSINATURA CARREGADA.";
+                statusDiv.style.color = 'var(--terminal-green)';
+            }
+        });
+
+        // ==========================================
+        // 3. FUNÇÃO PRINCIPAL DE VERIFICAÇÃO
+        // ==========================================
         async function verifyIntegrity() {
             const statusDiv = document.getElementById('status');
+            const pubKeyInput = document.getElementById('publicKey').value.trim();
             const fileInput = document.getElementById('fileInput');
             const signatureHex = document.getElementById('signature').value.trim();
 
             statusDiv.style.display = 'block';
             statusDiv.className = '';
-            statusDiv.innerHTML = 'INICIANDO PROTOCOLO DE VERIFICAÇÃO 1661...';
-            statusDiv.style.color = '#ffbf00';
+            statusDiv.innerHTML = 'ANALISANDO INTEGRIDADE DO ARTEFATO...';
+            statusDiv.style.color = 'var(--amber-alert)';
 
-            // Verifica se os campos básicos (arquivo e assinatura) estão preenchidos
+            // Validação de Segurança: Apenas a sua chave funciona
+            if (pubKeyInput !== OFFICIAL_PUBLIC_KEY) {
+                showResult(false, "ACESSO NEGADO: CHAVE NÃO RECONHECIDA PELO CÍRCULO 1661.");
+                if(window.logAttempt) window.logAttempt("CHAVE_INVALIDA", fileInput.files[0]?.name);
+                return;
+            }
+
             if (fileInput.files.length === 0 || !signatureHex) {
-                showResult(false, "ERRO: DADOS INCOMPLETOS PARA ANÁLISE.");
+                showResult(false, "ERRO: AGUARDANDO UPLOAD DO ARTEFATO E ASSINATURA.");
                 return;
             }
 
             try {
-                // 1. Processar Arquivo
                 const fileData = await fileInput.files[0].arrayBuffer();
-
-                // 2. Importar a Chave Oficial (Fixa)
-                // Usamos a constante diretamente em vez do input do usuário
-                const binaryKey = pemToArrayBuffer(OFFICIAL_PUBLIC_KEY);
+                const binaryKey = pemToArrayBuffer(pubKeyInput);
+                
                 const cryptoKey = await window.crypto.subtle.importKey(
                     "spki",
                     binaryKey,
@@ -266,10 +291,8 @@ dQIDAQAB
                     ["verify"]
                 );
 
-                // 3. Processar Assinatura
                 const signatureBuffer = hexToArrayBuffer(signatureHex);
 
-                // 4. Verificação Matemática
                 const isValid = await window.crypto.subtle.verify(
                     { name: "RSA-PSS", saltLength: 32 },
                     cryptoKey,
@@ -278,20 +301,20 @@ dQIDAQAB
                 );
 
                 if (isValid) {
-                    showResult(true, "STATUS: AUTÊNTICO. ORIGEM CONFIRMADA.");
+                    showResult(true, "CONFIRMADO: O ARTEFATO É LEGÍTIMO E PERTENCE AO PROJETO 1661.");
                     if(window.logAttempt) window.logAttempt("SUCESSO", fileInput.files[0].name);
                 } else {
-                    showResult(false, "STATUS: FALSIFICADO. INTEGRIDADE VIOLADA.");
-                    // Se falhar aqui, significa que a assinatura não bate com a chave oficial
-                    if(window.logAttempt) window.logAttempt("FALHA_MATEMATICA", fileInput.files[0].name);
+                    showResult(false, "ALERTA: ESTE ARQUIVO FOI ADULTERADO OU É UMA CÓPIA FALSA.");
+                    if(window.logAttempt) window.logAttempt("FALHA_VALIDACAO", fileInput.files[0].name);
                 }
 
             } catch (error) {
                 console.error(error);
-                showResult(false, "ERRO CRIPTOGRÁFICO: DADOS CORROMPIDOS.");
+                showResult(false, "ERRO CRIPTOGRÁFICO: DADOS INCOMPATÍVEIS.");
             }
         }
 
+        // --- Utilitários Auxiliares ---
         function showResult(isSuccess, text) {
             const div = document.getElementById('status');
             div.innerHTML = text;
