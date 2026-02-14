@@ -193,56 +193,34 @@
     </div>
 
     <script type="module">
-    // 1. Importações necessárias usando URLs CDN para rodar no navegador
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 2. Sua configuração que você acabou de obter
-    const firebaseConfig = {
-        apiKey: "AIzaSyANZ70umUwpT_drTgs9F3MZTX4XL2RRL8Q",
-        authDomain: "isit1661.firebaseapp.com",
-        projectId: "isit1661",
-        storageBucket: "isit1661.firebasestorage.app",
-        messagingSenderId: "557002116158",
-        appId: "1:557002116158:web:3c6c196f7a5856eb50556f"
-    };
-
-    // 3. Inicialização
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // 4. Função global para registrar as tentativas no Firestore
-    window.logAttempt = async (status, fileName) => {
-        try {
-            await addDoc(collection(db, "attempts"), {
-                status: status,
-                file: fileName || "desconhecido",
-                timestamp: serverTimestamp(),
-                userAgent: navigator.userAgent
-            });
-            console.log("Log 1661 registrado.");
-        } catch (e) {
-            console.error("Falha no reporte de log:", e);
-        }
-    };
-</script>
+        // SUA CONFIGURAÇÃO
+        const firebaseConfig = {
+            apiKey: "AIzaSyANZ70umUwpT_drTgs9F3MZTX4XL2RRL8Q",
+            authDomain: "isit1661.firebaseapp.com",
+            projectId: "isit1661",
+            storageBucket: "isit1661.firebasestorage.app",
+            messagingSenderId: "557002116158",
+            appId: "1:557002116158:web:3c6c196f7a5856eb50556f"
+        };
 
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
-        // Expor função de log para o escopo global (para usar no botão)
+        // Função global para registrar logs
         window.logAttempt = async (status, fileName) => {
             try {
-                await addDoc(collection(db, "verification_attempts"), {
+                await addDoc(collection(db, "attempts"), {
                     status: status,
-                    file: fileName || "unknown",
+                    file: fileName || "desconhecido",
                     timestamp: serverTimestamp(),
                     userAgent: navigator.userAgent
                 });
-                console.log("Log registrado no Firebase.");
+                console.log("Log 1661 registrado.");
             } catch (e) {
-                console.error("Erro ao logar no Firebase (modo offline?)", e);
+                console.error("Falha no reporte de log:", e);
             }
         };
     </script>
@@ -323,7 +301,6 @@
         // --- Utilitários de Conversão ---
 
         function pemToArrayBuffer(pem) {
-            // Remove cabeçalhos e quebras de linha
             const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----/g, '')
                            .replace(/-----END PUBLIC KEY-----/g, '')
                            .replace(/\s/g, '');
@@ -337,7 +314,6 @@
         }
 
         function hexToArrayBuffer(hexString) {
-            // Remove espaços se houver
             hexString = hexString.replace(/\s/g, '');
             if (hexString.length % 2 !== 0) {
                 throw new Error("Hex inválido");
