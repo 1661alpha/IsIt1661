@@ -21,8 +21,7 @@
         * { box-sizing: border-box; }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: var(--bg-color);
             background-image: 
                 radial-gradient(circle at 50% 50%, rgba(0, 50, 0, 0.1) 0%, transparent 60%),
@@ -40,23 +39,17 @@
 
         /* Scanline Effect */
         body::after {
-            content: " ";
-            display: block;
-            position: absolute;
+            content: " "; display: block; position: absolute;
             top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
+            z-index: 2; background-size: 100% 2px, 3px 100%;
             pointer-events: none;
         }
 
         .container {
-            position: relative;
-            z-index: 10;
-            width: 90%;
-            max-width: 700px;
-            padding: 40px;
-            border-radius: 16px;
+            position: relative; z-index: 10;
+            width: 90%; max-width: 700px;
+            padding: 40px; border-radius: 16px;
             background: var(--glass-bg);
             backdrop-filter: blur(var(--blur));
             -webkit-backdrop-filter: blur(var(--blur));
@@ -65,111 +58,98 @@
         }
 
         h1 {
-            color: var(--terminal-green);
-            font-size: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 30px;
-            border-bottom: 1px solid var(--glass-border);
-            padding-bottom: 10px;
-            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+            color: var(--terminal-green); font-size: 1.5rem;
+            text-transform: uppercase; letter-spacing: 2px;
+            margin-bottom: 20px; border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 10px; text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
         }
 
-        .input-group { margin-bottom: 25px; }
+        /* --- ABAS DE NAVEGAÇÃO (NOVO) --- */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        
+        .tab-btn {
+            flex: 1; padding: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            color: #666; cursor: pointer;
+            font-family: inherit; font-weight: bold;
+            text-transform: uppercase; transition: 0.3s;
+        }
+
+        .tab-btn:hover { color: var(--text-dim); border-color: #666; }
+
+        .tab-btn.active {
+            border-color: var(--terminal-green);
+            color: var(--terminal-green);
+            background: rgba(0, 255, 65, 0.05);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.1);
+        }
+
+        /* --- GRUPOS DE INPUT --- */
+        .input-group { margin-bottom: 25px; display: none; /* Oculto por padrão */ }
+        .input-group.active { display: block; animation: fadeIn 0.4s; }
+        
+        /* O grupo de assinatura é sempre visível, mas usamos classe específica para os inputs */
+        .signature-group { margin-bottom: 25px; display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
         label {
-            display: block;
-            color: var(--amber-alert);
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            font-weight: bold;
+            display: block; color: var(--amber-alert);
+            margin-bottom: 8px; font-size: 0.9rem; font-weight: bold;
         }
 
         input[type="file"], textarea, input[type="text"] {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #333;
-            color: var(--terminal-green);
-            padding: 15px;
-            border-radius: 8px;
+            width: 100%; background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #333; color: var(--terminal-green);
+            padding: 15px; border-radius: 8px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            resize: vertical;
-            transition: 0.3s;
+            font-size: 0.85rem; resize: vertical; transition: 0.3s;
         }
 
         textarea { height: 80px; }
+        
+        /* Estilo específico para a entrada de texto do enigma */
+        #textInput { 
+            height: 150px; 
+            border-left: 3px solid var(--amber-alert);
+        }
 
         input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--terminal-green);
+            outline: none; border-color: var(--terminal-green);
             box-shadow: 0 0 15px rgba(0, 255, 65, 0.1);
         }
 
-        /* Botão escondido visualmente, mas funcional para lógica */
         #publicKey { display: none; }
 
         .btn-verify {
-            width: 100%;
-            padding: 15px;
+            width: 100%; padding: 15px; margin-top: 10px;
             background: rgba(0, 255, 65, 0.1);
             border: 1px solid var(--terminal-green);
             color: var(--terminal-green);
             font-family: 'JetBrains Mono', monospace;
-            font-weight: bold;
-            font-size: 1.1rem;
-            cursor: pointer;
-            text-transform: uppercase;
+            font-weight: bold; font-size: 1.1rem;
+            cursor: pointer; text-transform: uppercase;
             transition: all 0.3s ease;
-            margin-top: 10px;
         }
 
         .btn-verify:hover {
-            background: var(--terminal-green);
-            color: #000;
+            background: var(--terminal-green); color: #000;
             box-shadow: 0 0 20px var(--terminal-green);
         }
 
         #status {
-            margin-top: 20px;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            border-radius: 4px;
-            display: none;
+            margin-top: 20px; padding: 15px; text-align: center;
+            font-weight: bold; border-radius: 4px; display: none;
             word-break: break-word;
         }
 
-        .success {
-            border: 1px solid var(--terminal-green);
-            background: rgba(0, 255, 65, 0.1);
-            color: var(--terminal-green);
-        }
+        .success { border: 1px solid var(--terminal-green); background: rgba(0, 255, 65, 0.1); color: var(--terminal-green); }
+        .failure { border: 1px solid #ff4444; background: rgba(255, 68, 68, 0.1); color: #ff4444; }
+        .loading { border: 1px solid var(--amber-alert); background: rgba(255, 191, 0, 0.1); color: var(--amber-alert); animation: pulse 1.5s infinite; }
 
-        .failure {
-            border: 1px solid #ff4444;
-            background: rgba(255, 68, 68, 0.1);
-            color: #ff4444;
-        }
-        
-        .loading {
-            border: 1px solid var(--amber-alert);
-            background: rgba(255, 191, 0, 0.1);
-            color: var(--amber-alert);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-
-        .helper-text {
-            font-size: 0.75rem;
-            opacity: 0.7;
-            margin-top: 4px;
-        }
+        @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .helper-text { font-size: 0.75rem; opacity: 0.7; margin-top: 4px; }
 
     </style>
 </head>
@@ -177,16 +157,26 @@
 
     <div class="container">
         <h1>/// Protocolo de Verificação</h1>
-        
         <textarea id="publicKey"></textarea>
 
-        <div class="input-group">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchMode('file')">MODO ARQUIVO</button>
+            <button class="tab-btn" onclick="switchMode('text')">MODO TEXTO</button>
+        </div>
+
+        <div id="group-file" class="input-group active">
             <label>>> PASSO 1: ARQUIVO SUSPEITO</label>
             <input type="file" id="fileInput">
             <div class="helper-text" id="fileHelper">Selecione o artefato local ou aguarde download automático.</div>
         </div>
 
-        <div class="input-group">
+        <div id="group-text" class="input-group">
+            <label>>> PASSO 1: MENSAGEM CRIPTOGRAFADA</label>
+            <textarea id="textInput" placeholder="Cole o conteúdo da mensagem aqui..."></textarea>
+            <div class="helper-text">O sistema converterá automaticamente para binário (UTF-8).</div>
+        </div>
+
+        <div class="signature-group">
             <label>>> PASSO 2: ASSINATURA (HEX ou BASE64)</label>
             <textarea id="signature" placeholder="Cole a assinatura Hexadecimal ou Base64..."></textarea>
             <div class="helper-text">Identificação automática de formato ativada.</div>
@@ -198,30 +188,29 @@
     </div>
 
     <script type="module">
-        // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyANZ70umUwpT_drTgs9F3MZTX4XL2RRL8Q",
-  authDomain: "isit1661.firebaseapp.com",
-  projectId: "isit1661",
-  storageBucket: "isit1661.firebasestorage.app",
-  messagingSenderId: "557002116158",
-  appId: "1:557002116158:web:3c6c196f7a5856eb50556f"
-};
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyANZ70umUwpT_drTgs9F3MZTX4XL2RRL8Q",
+            authDomain: "isit1661.firebaseapp.com",
+            projectId: "isit1661",
+            storageBucket: "isit1661.firebasestorage.app",
+            messagingSenderId: "557002116158",
+            appId: "1:557002116158:web:3c6c196f7a5856eb50556f"
+        };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Expõe a função de log globalmente
         window.logAttempt = async (status, fileName) => {
             try {
                 await addDoc(collection(db, "attempts"), {
                     status: status,
                     file: fileName || "desconhecido",
+                    mode: window.currentMode || "unknown", // Adicionei o modo ao log
                     timestamp: serverTimestamp(),
                     userAgent: navigator.userAgent
                 });
@@ -244,27 +233,25 @@ dnJdfiksA35lsMTpDMEpQ6bqqfn+e5KvXkBQPSR0QbB84oDTx5KjmiWy5KoJPMDD
 qwIDAQAB
 -----END PUBLIC KEY-----`;
 
-        // Variável global para armazenar arquivo baixado automaticamente
+        // ESTADO GLOBAL
         let autoDownloadedBuffer = null;
         let autoFileName = null;
+        window.currentMode = 'file'; // 'file' ou 'text'
 
         // 2. INICIALIZAÇÃO E EVENT LISTENERS
         window.addEventListener('load', async () => {
-            // Garante que o botão chama a função
             document.getElementById('btnVerify').addEventListener('click', verifyIntegrity);
-            
-            // Preenche a chave oculta
             document.getElementById('publicKey').value = OFFICIAL_PUBLIC_KEY.trim();
 
             const urlParams = new URLSearchParams(window.location.search);
             const statusDiv = document.getElementById('status');
 
-            // A. Captura Assinatura da URL
+            // Captura Assinatura da URL
             if (urlParams.has('sig')) {
                 document.getElementById('signature').value = urlParams.get('sig').trim();
             }
 
-            // B. Captura Arquivo Remoto da URL (ex: ?url=https://site.com/pista.pdf)
+            // Captura Arquivo Remoto (apenas para modo arquivo)
             if (urlParams.has('url')) {
                 const fileUrl = urlParams.get('url');
                 statusDiv.style.display = 'block';
@@ -272,25 +259,28 @@ qwIDAQAB
                 statusDiv.innerHTML = ">>> PROTOCOLO REMOTO: BAIXANDO ARTEFATO DO SERVIDOR...";
                 
                 try {
-                    const response = await fetch(fileUrl);
+                    // Tenta usar proxy se for dropbox, ou direto se for GitHub
+                    let finalUrl = fileUrl;
+                    if(fileUrl.includes("dropbox.com") && !fileUrl.includes("corsproxy")) {
+                        finalUrl = "https://corsproxy.io/?" + encodeURIComponent(fileUrl);
+                    }
+
+                    const response = await fetch(finalUrl);
                     if (!response.ok) throw new Error("Falha no download");
                     
                     autoDownloadedBuffer = await response.arrayBuffer();
-                    // Tenta adivinhar nome do arquivo pela URL
-                    autoFileName = fileUrl.substring(fileUrl.lastIndexOf('/')+1) || "artefato_remoto";
+                    autoFileName = fileUrl.substring(fileUrl.lastIndexOf('/')+1).split('?')[0] || "artefato_remoto";
                     
-                    statusDiv.innerHTML = ">>> DOWNLOAD CONCLUÍDO. INICIANDO VERIFICAÇÃO...";
+                    statusDiv.innerHTML = ">>> DOWNLOAD CONCLUÍDO. PRONTO PARA VERIFICAR.";
+                    statusDiv.className = 'success';
                     
-                    // Se já tiver assinatura, roda a verificação automaticamente
-                    if (document.getElementById('signature').value) {
+                    // Se tiver assinatura, roda verificação (apenas se estiver no modo arquivo)
+                    if (document.getElementById('signature').value && window.currentMode === 'file') {
                         verifyIntegrity();
-                    } else {
-                        statusDiv.className = 'success';
-                        statusDiv.innerHTML = "DOWNLOAD OK. AGUARDANDO ASSINATURA.";
                     }
                 } catch (error) {
                     statusDiv.className = 'failure';
-                    statusDiv.innerHTML = "ERRO: NÃO FOI POSSÍVEL BAIXAR O ARQUIVO REMOTO (CORS OU URL INVÁLIDA).";
+                    statusDiv.innerHTML = "ERRO: FALHA NO DOWNLOAD REMOTO (CORS).";
                 }
             } else if (urlParams.has('sig')) {
                 statusDiv.style.display = 'block';
@@ -299,10 +289,28 @@ qwIDAQAB
             }
         });
 
-        // 3. FUNÇÃO DE VERIFICAÇÃO (CORRIGIDA E ROBUSTA)
+        // 3. FUNÇÃO DE TROCA DE MODO (UI)
+        window.switchMode = function(mode) {
+            window.currentMode = mode;
+            
+            // Atualiza botões
+            const btns = document.querySelectorAll('.tab-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            // Adiciona active ao botão clicado (identificado pelo onclick)
+            event.target.classList.add('active');
+
+            // Alterna visibilidade dos grupos
+            document.getElementById('group-file').classList.remove('active');
+            document.getElementById('group-text').classList.remove('active');
+            document.getElementById('group-' + mode).classList.add('active');
+
+            // Limpa status ao trocar
+            document.getElementById('status').style.display = 'none';
+        }
+
+        // 4. FUNÇÃO DE VERIFICAÇÃO PRINCIPAL
         async function verifyIntegrity() {
             const statusDiv = document.getElementById('status');
-            const fileInput = document.getElementById('fileInput');
             const signatureRaw = document.getElementById('signature').value.trim();
             const pubKeyInput = document.getElementById('publicKey').value.trim();
 
@@ -316,71 +324,77 @@ qwIDAQAB
                 return;
             }
 
-            // Define qual arquivo usar (o do input ou o baixado automaticamente)
-            let fileBuffer;
-            let fileNameForLog;
+            let dataBuffer;
+            let logName;
 
-            if (autoDownloadedBuffer) {
-                fileBuffer = autoDownloadedBuffer;
-                fileNameForLog = autoFileName + " (AUTO)";
-            } else if (fileInput.files.length > 0) {
-                fileBuffer = await fileInput.files[0].arrayBuffer();
-                fileNameForLog = fileInput.files[0].name;
-            } else {
-                showResult(false, "ERRO: NENHUM ARQUIVO SELECIONADO OU BAIXADO.");
-                return;
-            }
-
-            if (!signatureRaw) {
-                showResult(false, "ERRO: ASSINATURA AUSENTE.");
-                return;
-            }
-
+            // --- LÓGICA DE DECISÃO DE FONTE (TEXTO vs ARQUIVO) ---
             try {
-                // Prepara a Chave
+                if (window.currentMode === 'text') {
+                    // MODO TEXTO
+                    const textVal = document.getElementById('textInput').value;
+                    if (!textVal) {
+                        showResult(false, "ERRO: CAMPO DE TEXTO VAZIO.");
+                        return;
+                    }
+                    // Converte String para ArrayBuffer (UTF-8)
+                    dataBuffer = new TextEncoder().encode(textVal);
+                    logName = "Mensagem_Texto_Raw";
+
+                } else {
+                    // MODO ARQUIVO
+                    const fileInput = document.getElementById('fileInput');
+                    
+                    if (autoDownloadedBuffer) {
+                        dataBuffer = autoDownloadedBuffer;
+                        logName = autoFileName + " (AUTO)";
+                    } else if (fileInput.files.length > 0) {
+                        dataBuffer = await fileInput.files[0].arrayBuffer();
+                        logName = fileInput.files[0].name;
+                    } else {
+                        showResult(false, "ERRO: NENHUM ARQUIVO SELECIONADO.");
+                        return;
+                    }
+                }
+
+                if (!signatureRaw) {
+                    showResult(false, "ERRO: ASSINATURA AUSENTE.");
+                    return;
+                }
+
+                // Criptografia
                 const binaryKey = pemToArrayBuffer(pubKeyInput);
                 const cryptoKey = await window.crypto.subtle.importKey(
-                    "spki",
-                    binaryKey,
-                    { name: "RSA-PSS", hash: "SHA-256" },
-                    false,
-                    ["verify"]
+                    "spki", binaryKey, { name: "RSA-PSS", hash: "SHA-256" }, false, ["verify"]
                 );
 
-                // Prepara a Assinatura (Detecta se é Hex ou Base64)
                 const signatureBuffer = parseSignature(signatureRaw);
 
-                // Verifica
                 const isValid = await window.crypto.subtle.verify(
                     { name: "RSA-PSS", saltLength: 32 },
-                    cryptoKey,
-                    signatureBuffer,
-                    fileBuffer
+                    cryptoKey, signatureBuffer, dataBuffer
                 );
 
                 if (isValid) {
-                    showResult(true, "ACESSO CONCEDIDO: ARTEFATO AUTÊNTICO [PROJETO 1661].");
-                    if(window.logAttempt) window.logAttempt("SUCESSO", fileNameForLog);
+                    showResult(true, "ACESSO CONCEDIDO: INTEGRIDADE CONFIRMADA.");
+                    if(window.logAttempt) window.logAttempt("SUCESSO", logName);
                 } else {
-                    showResult(false, "ACESSO NEGADO: ASSINATURA NÃO CORRESPONDE AO ARQUIVO.");
-                    if(window.logAttempt) window.logAttempt("FALHA_VALIDACAO", fileNameForLog);
+                    showResult(false, "ACESSO NEGADO: ASSINATURA INVÁLIDA.");
+                    if(window.logAttempt) window.logAttempt("FALHA_VALIDACAO", logName);
                 }
 
             } catch (error) {
                 console.error(error);
-                showResult(false, "ERRO CRÍTICO: FORMATO DE DADOS INVÁLIDO (Base64/Hex corrompido).");
+                showResult(false, "ERRO CRÍTICO: DADOS OU ASSINATURA CORROMPIDOS.");
             }
         }
 
         // --- Utilitários ---
-
         function showResult(isSuccess, text) {
             const div = document.getElementById('status');
             div.innerHTML = text;
             div.className = isSuccess ? 'success' : 'failure';
         }
 
-        // Converte PEM para Buffer
         function pemToArrayBuffer(pem) {
             const b64 = pem.replace(/-----BEGIN PUBLIC KEY-----/g, '').replace(/-----END PUBLIC KEY-----/g, '').replace(/\s/g, '');
             const binary = atob(b64);
@@ -390,43 +404,28 @@ qwIDAQAB
             return buffer;
         }
 
-        // LÓGICA INTELIGENTE: Detecta se é Hex ou Base64 e converte
         function parseSignature(input) {
-            // Remove espaços e quebras de linha
             const cleanInput = input.replace(/\s/g, '');
-            
-            // Regex para checar se é estritamente Hexadecimal
             const isHex = /^[0-9a-fA-F]+$/.test(cleanInput);
 
             if (isHex && cleanInput.length % 2 === 0) {
-                // Trata como HEX
                 const byteArray = new Uint8Array(cleanInput.length / 2);
                 for (let i = 0; i < cleanInput.length; i += 2) {
                     byteArray[i / 2] = parseInt(cleanInput.substr(i, 2), 16);
                 }
                 return byteArray.buffer;
             } else {
-                // Tenta tratar como BASE64 (Padrão ou URL-safe)
                 try {
-                    // Corrige Base64 URL Safe se necessário (- por + e _ por /)
                     let base64 = cleanInput.replace(/-/g, '+').replace(/_/g, '/');
-                    // Adiciona padding se necessário
                     while (base64.length % 4) { base64 += '='; }
-                    
                     const binary = atob(base64);
                     const buffer = new ArrayBuffer(binary.length);
                     const view = new Uint8Array(buffer);
-                    for (let i = 0; i < binary.length; i++) { 
-                        view[i] = binary.charCodeAt(i); 
-                    }
+                    for (let i = 0; i < binary.length; i++) { view[i] = binary.charCodeAt(i); }
                     return buffer;
-                } catch (e) {
-                    throw new Error("Formato de assinatura desconhecido");
-                }
+                } catch (e) { throw new Error("Formato inválido"); }
             }
         }
     </script>
 </body>
 </html>
-
-
